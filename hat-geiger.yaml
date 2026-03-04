@@ -1,0 +1,378 @@
+#                                                                          
+#                                               ░░▓▓▓▒░░                   
+#                                               ░░░▒▓███▓░                 
+#                                                ░░░░ ░▒██▓░               
+#                                  ░░░░         ░▒▓███▓░░▒██░░             
+#                                ░░▒███▒░░          ░▒██▒░░██░░            
+#                            ░░░▓█████████▓░░░  ░▒█▓▒░░▓█░░▒█▒░            
+#                          ░░▓███████▒███████▓░░ ▒████░▒█▒░▒█▓░            
+#                      ░░▒▓██████▓▒░░░░░░▓██████▓█████░                    
+#                    ░░███████▓░░░░█████░░░░▓█████████░                    
+#                 ░▒███████▓░░░▒███████████▒░ ░▓███████▒░░                 
+#            ░░░▒███████▓░   ▒██████▓▓▓██████▒   ░▓███████▒░░░             
+#          ░░▒███████▓░░░░   ▒████░     ░████▒   ░░░░▓███████▓░░░          
+#      ░░▒▓██████▓▒░░░▓██▒   ▒███▒░      ▒███▒  ░▒██▓▒░░▒▓██████▓▒░░       
+#     ░▒██████▓▒░   ░▓███▓   ▒███▒░      ▒███▒  ░▒█████▓░░░▒▓██████▒░      
+#     ░░███▓░░░     ░▓███▓   ▒███▒░      ▒███▒   ░░▓██████▓▒░░░▓███▒░      
+#      ░░░░░░       ░▓███▓   ▒███▒░      ▒███▒      ░░▓███████▒░░░░░       
+#       ░▒███▒░░░░░░░▓███▓   ▒███▒░░░░░░░▒███▒         ▒█████████▒░        
+#       ░▓███████████████▓   ▒███████████████▒         ▒████▓█████░        
+#       ░▓███████████████▓   ▒███████████████▒         ▒███▓░ ░▓▓▓░        
+#       ░▓███▒░░░░░░░▓███▓   ▒███▒░░░░░░░▒███▒         ▒███▓░              
+#       ░▓███▒      ░▓███▓   ▒███▒░      ░███▒         ▒███▓░              
+#       ░▓███▒      ░▓███▓   ▒███▒░      ░███▒         ▒███▓░              
+#       ░▓███▒      ░▓███▓   ▒███▒░      ░███▒         ▒███▓░              
+#       ░▓███▒      ░▓███▓   ▒███▒░      ░███▒         ▒███▓░              
+#       ░▒██▓░      ░▒▓█▓░   ░██▓░░      ░▓██░         ░▓██▒░              
+#                                                                          
+# ─────────────────────────────────────────────────────────────────────────
+#   Home Automation Things — HAT Geiger Counter
+#   Outdoor Geiger counter on ESP32-C3.
+#   Measures ionizing radiation in CPM and µSv/hr using a J321 Geiger tube.
+#   Optionally uploads readings to radmon.org.
+#   https://github.com/homeautomationthings/HAT-Geiger
+# ─────────────────────────────────────────────────────────────────────────
+
+substitutions:
+  name: hat-geiger
+  friendly_name: "HAT Geiger Counter"
+
+esphome:
+  name: "${name}"
+  friendly_name: "${friendly_name}"
+  name_add_mac_suffix: true        # Ensures unique mDNS hostnames across all units
+  project:
+    name: "home-automation-things.hat-geiger"
+    version: "1.0.0"
+  on_boot:
+    priority: 600                  # Run before sensors start counting pulses
+    then:
+      # Set PWM pulse width to generate 400V to Geiger tube
+      - output.set_level:
+          id: pwm_gpio4
+          level: 27%
+      # Restore saved Radmon credentials into text fields
+      - text.set:
+          id: text_radmon_user
+          value: !lambda 'return id(global_radmon_username);'
+      - text.set:
+          id: text_radmon_password
+          value: !lambda 'return id(global_radmon_password);'
+
+esp32:
+  variant: esp32c3
+
+dashboard_import:
+  package_import_url: github://homeautomationthings/HAT-Geiger/hat-geiger.yaml@main
+  import_full_config: true
+
+logger:
+
+# Wi-Fi provisioning — both required for Made for ESPHome certification.
+# improv_serial allows provisioning over the USB-C port.
+# esp32_improv allows provisioning over BLE from the ESPHome mobile app.
+improv_serial:
+
+esp32_improv:
+  authorizer: none
+
+# ===================================
+# CONNECTIVITY
+# ===================================
+wifi:
+  # Fallback hotspot if Wi-Fi provisioning has not been completed or connection is lost.
+  # Connect to "HAT-Geiger Fallback" to access the captive portal and configure Wi-Fi.
+  ap:
+    ssid: "HAT-Geiger Fallback"
+    password: "HMXKEehTzi81"
+
+captive_portal:
+
+web_server:
+  port: 80
+
+# API encryption key and OTA password are intentionally omitted here.
+# ESPHome generates unique keys per device when the config is adopted via the dashboard.
+api:
+
+ota:
+  - platform: esphome
+
+# Boots into a minimal safe firmware if the device crashes on startup repeatedly.
+# Allows OTA recovery without physical access — essential for outdoor installations.
+safe_mode:
+
+# ===================================
+# TIME
+# ===================================
+time:
+  - platform: homeassistant
+    id: ha_time
+  - platform: sntp
+    id: sntp_time              # Fallback time source when Home Assistant is unreachable
+
+# ===================================
+# HTTP
+# ===================================
+http_request:
+  timeout: 10s                 # Prevents a slow/unresponsive radmon.org from blocking the upload interval
+
+# ===================================
+# OUTPUTS
+# ===================================
+output:
+
+  # LEDC PWM drives the base of Q2 (TTC014) to regulate the boost converter.
+  # 27% duty cycle at 2500 Hz produces ~400V for the J321 Geiger tube.
+  # Adjust duty cycle if a different tube requiring a different anode voltage is used.
+  - platform: ledc
+    id: pwm_gpio4
+    pin: GPIO4
+    frequency: 2500            # Hz
+
+  # Pulse indicator LED. Active HIGH: GPIO0 → R7 (100Ω) → D5 → GND
+  - platform: gpio
+    id: led_gpio0
+    pin: GPIO0
+
+# ===================================
+# SENSORS
+# ===================================
+sensor:
+
+  # GPIO5 and GPIO6 are both wired to the PULSE net (same physical signal).
+  # They are split across two separate ESPHome components intentionally:
+  #   - pulse_meter on GPIO5: only used to trigger the LED blink per detected particle.
+  #   - pulse_counter on GPIO6: accumulates counts over the update interval for CPM reporting.
+  # This avoids interference between the LED blink delay and the pulse counter logic.
+
+  - platform: pulse_meter
+    pin: GPIO5
+    id: pulse_sensor
+    internal: true             # Not exposed to Home Assistant; used only for LED triggering
+    on_raw_value:
+      then:
+        - output.turn_on: led_gpio0
+        - delay: 5ms
+        - output.turn_off: led_gpio0
+
+  - platform: pulse_counter
+    pin: GPIO6
+    name: "CPM"
+    id: cpm_sensor
+    force_update: true         # Report every interval even if the value has not changed
+    accuracy_decimals: 0
+    on_value:
+      then:
+        - component.update: radiation_sensor
+        - globals.set:
+            id: last_cpm_count
+            value: !lambda return id(cpm_sensor).state;
+
+  # Converts CPM to µSv/hr using the J321 Geiger tube conversion factor.
+  # Conversion factor 151 CPM/(µSv/hr) is specific to the J321 tube.
+  # If a different tube is used, update this value accordingly.
+  # update_interval is set to never — this sensor is triggered by cpm_sensor's on_value.
+  - platform: template
+    name: "Radiation"
+    id: radiation_sensor
+    update_interval: never
+    unit_of_measurement: "µSv/hr"
+    state_class: measurement
+    icon: "mdi:radioactive-circle-outline"
+    accuracy_decimals: 3
+    lambda: |-
+      return (id(cpm_sensor).state / 151);
+
+  - platform: wifi_signal
+    name: "WiFi Signal dB"
+    id: wifi_signal_db
+    update_interval: 60s
+    entity_category: "diagnostic"
+    icon: mdi:wifi-arrow-up-down
+
+  # Derived from wifi_signal_db using the standard formula: % = 2 * (dBm + 100), clamped to 0–100
+  - platform: copy
+    source_id: wifi_signal_db
+    name: "WiFi Signal %"
+    id: wifi_signal_pct
+    icon: mdi:wifi-arrow-up-down
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+    device_class: ""
+
+  # Raw uptime in seconds from ESPHome, converted to hours by the filter
+  - platform: uptime
+    name: "Uptime"
+    id: uptime_sensor
+    disabled_by_default: false
+    force_update: false
+    unit_of_measurement: h
+    icon: mdi:timer-outline
+    accuracy_decimals: 0
+    device_class: duration
+    state_class: total_increasing
+    entity_category: "diagnostic"
+    update_interval: 60s
+    filters:
+      - lambda: return x / 3600;
+
+# ===================================
+# TEXT SENSORS
+# ===================================
+text_sensor:
+
+  - platform: wifi_info
+    ip_address:
+      name: "IP"
+      id: wifi_ip
+      icon: mdi:ip-network
+    ssid:
+      name: "SSID"
+      id: wifi_ssid
+      icon: mdi:wifi-star
+
+  - platform: version
+    name: "FW"
+    id: fw_version
+    hide_timestamp: true
+    disabled_by_default: false
+    icon: mdi:cogs
+    entity_category: diagnostic
+
+  # Shows the last raw response string from radmon.org (e.g. "New CPM: 14")
+  - platform: template
+    name: "Radmon Response"
+    id: radmon_response
+    icon: mdi:help-network-outline
+
+  - platform: template
+    name: "Radmon Last Upload"
+    id: radmon_last_update
+    icon: mdi:clock-time-eight-outline
+
+# ===================================
+# BUTTONS
+# ===================================
+button:
+
+  - platform: restart
+    name: "Restart"
+    id: restart_button
+
+  # Boots into a minimal safe firmware for OTA recovery.
+  # Use this if a bad update makes the device unreachable.
+  - platform: safe_mode
+    name: "Safe Mode Boot"
+    id: safe_mode_button
+    entity_category: diagnostic
+
+# ===================================
+# SWITCHES
+# ===================================
+switch:
+
+  # When enabled, CPM readings are uploaded to radmon.org every 65 seconds.
+  # Requires Radmon Username and Password to be configured.
+  # Defaults to OFF so uploads don't start until the user explicitly enables them.
+  - platform: template
+    name: "Radmon.org Upload"
+    id: enable_radmon_switch
+    icon: mdi:cloud-upload
+    restore_mode: RESTORE_DEFAULT_OFF
+    optimistic: true
+
+# ===================================
+# INTERVALS
+# ===================================
+interval:
+
+  # Uploads the latest CPM value to radmon.org every 65 seconds.
+  # 65s is used instead of 60s to avoid clashing with the pulse_counter update interval
+  # and to stay within radmon.org's recommended minimum submission interval.
+  # The response body is stripped of any trailing HTML before being stored.
+  - interval: 65s
+    then:
+      - if:
+          condition:
+            lambda: 'return id(enable_radmon_switch).state;'
+          then:
+            - http_request.get:
+                url: !lambda |-
+                  return "https://radmon.org/radmon.php?function=submit&user=" +
+                    id(global_radmon_username) +
+                    "&password=" +
+                    id(global_radmon_password) +
+                    "&value=" +
+                    std::to_string((int)id(last_cpm_count)) +
+                    "&unit=CPM";
+                request_headers:
+                  Content-Type: application/json
+                capture_response: true
+                on_response:
+                  then:
+                    - lambda: |-
+                        std::string clean_body = body;
+                        clean_body = clean_body.substr(0, clean_body.find('<'));
+                        ESP_LOGI("radmon", "Response: %s", clean_body.c_str());
+                        id(radmon_response).publish_state(clean_body);
+                        id(radmon_last_update).publish_state(id(ha_time).now().strftime("%F %T"));
+                on_error:
+                  then:
+                    - lambda: |-
+                        ESP_LOGI("radmon", "Response: Timeout");
+                        id(radmon_response).publish_state("Timeout");
+                        id(radmon_last_update).publish_state(id(ha_time).now().strftime("%F %T"));
+
+# ===================================
+# TEXTS
+# ===================================
+text:
+
+  # Radmon.org account credentials.
+  # Values are written to globals on change so they persist across reboots via NVS.
+  - platform: template
+    name: "Radmon Username"
+    id: text_radmon_user
+    mode: TEXT
+    optimistic: true
+    icon: mdi:account
+    on_value:
+      then:
+        - lambda: |-
+            id(global_radmon_username) = id(text_radmon_user).state;
+
+  - platform: template
+    name: "Radmon Password"
+    id: text_radmon_password
+    mode: PASSWORD
+    optimistic: true
+    icon: mdi:form-textbox-password
+    on_value:
+      then:
+        - lambda: |-
+            id(global_radmon_password) = id(text_radmon_password).state;
+
+# ===================================
+# GLOBALS
+# ===================================
+globals:
+
+  # Radmon credentials stored in NVS flash, restored on boot into the text fields above
+  - id: global_radmon_username
+    type: std::string
+    restore_value: yes
+
+  - id: global_radmon_password
+    type: std::string
+    restore_value: yes
+
+  # Holds the most recent CPM value for use in the Radmon upload URL.
+  # Stored as a global so the upload interval always has access to the latest reading,
+  # even if it fires between pulse_counter update cycles.
+  - id: last_cpm_count
+    type: float
+    restore_value: yes
+    initial_value: '0'
