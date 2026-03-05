@@ -97,6 +97,7 @@ api:
 
 ota:
   - platform: esphome
+  - platform: http_request
 
 # Boots into a minimal safe firmware if the device crashes on startup repeatedly.
 # Allows OTA recovery without physical access — essential for outdoor installations.
