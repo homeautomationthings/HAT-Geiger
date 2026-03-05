@@ -40,7 +40,7 @@
 - Native **Home Assistant** integration via ESPHome
 - **Outdoor rated** — designed for permanent external installation
 - Optional automatic upload to **[radmon.org](https://radmon.org)** for public radiation monitoring
-- Easy Wi-Fi setup via the **ESPHome mobile app** (BLE) or **USB-C**
+- Easy Wi-Fi setup via **hotspot**, **Bluetooth** (Home Assistant app) or **USB-C**
 - Over-the-air (OTA) firmware updates
 - Built-in safe mode recovery for remote troubleshooting
 
@@ -59,20 +59,29 @@
 
 - [Home Assistant](https://www.home-assistant.io/) with the
   [ESPHome add-on](https://esphome.io/guides/getting_started_hassio.html) installed
-- ESPHome mobile app ([iOS](https://apps.apple.com/app/esphome/id1564944745) /
-  [Android](https://play.google.com/store/apps/details?id=io.esphome.app)) — for initial Wi-Fi setup
 
 ### 1. Power the device
 
-Connect the HAT Geiger Counter to power via the USB-C port or the screw terminal (6–12V).
+Connect the HAT Geiger Counter to power via the USB-C port or the screw terminal (5–36V DC).
 
 ### 2. Provision Wi-Fi
 
-Open the **ESPHome mobile app** and tap **Add Device**. The app will detect the HAT Geiger
-Counter via Bluetooth and guide you through entering your Wi-Fi credentials.
+Choose whichever method works best for you:
 
-Alternatively, connect a USB-C cable to your computer and use the
-[ESPHome dashboard](https://esphome.io) to provision via serial.
+**Method A — Hotspot (easiest, no app required)**
+1. On your phone or computer, open Wi-Fi settings
+2. Connect to the network **"HAT Geiger Counter Hotspot"**
+3. A captive portal page will open automatically — enter your Wi-Fi name and password
+4. The device will connect and the hotspot will disappear
+
+**Method B — Bluetooth via Home Assistant app**
+1. Open the **Home Assistant** mobile app ([iOS](https://apps.apple.com/app/home-assistant/id1099568401) / [Android](https://play.google.com/store/apps/details?id=io.homeassistant.companion.android))
+2. Go to **Settings → Devices & Services** and look for a **Discovered** banner at the top
+3. The HAT Geiger Counter will appear — tap it and follow the steps to enter your Wi-Fi credentials
+
+**Method C — USB-C serial**
+1. Connect the device to your computer via USB-C
+2. Open the [ESPHome dashboard](https://esphome.io) and follow the prompts to provision via serial
 
 ### 3. Adopt in Home Assistant
 
@@ -120,7 +129,7 @@ Readings will be submitted every 65 seconds automatically.
 |-----------|-------------|
 | MCU | ESP32-C3 (ESP32-C3-WROOM-02U) |
 | Geiger tube | J321 |
-| Power input | USB-C or 6–36V DC screw terminal |
+| Power input | USB-C or 5–36V DC screw terminal |
 
 ### Pinout
 
