@@ -44,6 +44,7 @@ esphome:
   project:
     name: "home-automation-things.hat-geiger"
     version: "1.0.0"
+    icon: "mdi:radioactive"
   on_boot:
     priority: 600                  # Run before sensors start counting pulses
     then:
@@ -169,6 +170,7 @@ sensor:
   - platform: pulse_counter
     pin: GPIO6
     name: "CPM"
+    icon: "mdi:radioactive"
     id: cpm_sensor
     force_update: true         # Report every interval even if the value has not changed
     accuracy_decimals: 0
