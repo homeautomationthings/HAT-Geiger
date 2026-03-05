@@ -118,6 +118,15 @@ http_request:
   timeout: 10s                 # Prevents a slow/unresponsive radmon.org from blocking the upload interval
 
 # ===================================
+# UPDATE
+# ===================================
+update:
+  - platform: http_request
+    name: "Firmware Update"
+    id: firmware_update
+    source: https://github.com/homeautomationthings/HAT-Geiger/releases/latest/download/hat-geiger.bin
+
+# ===================================
 # OUTPUTS
 # ===================================
 output:
