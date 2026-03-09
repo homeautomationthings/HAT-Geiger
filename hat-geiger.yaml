@@ -42,7 +42,7 @@ esphome:
   friendly_name: "${friendly_name}"
   name_add_mac_suffix: true        # Ensures unique mDNS hostnames across all units
   project:
-    name: "home-automation-things.hat-geiger"
+    name: "Home Automation Things.HAT Geiger"
     version: "1.0.0"
     icon: "mdi:radioactive"
   on_boot:
