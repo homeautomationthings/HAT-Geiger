@@ -42,9 +42,9 @@ esphome:
   friendly_name: "${friendly_name}"
   name_add_mac_suffix: true        # Ensures unique mDNS hostnames across all units
   project:
-    name: "Home Automation Things.HAT Geiger"
+    name: "home-automation-things.hat-geiger"
     version: "1.0.0"
-    icon: "mdi:radioactive"
+  icon: "mdi:radioactive"
   on_boot:
     priority: 600                  # Run before sensors start counting pulses
     then:
@@ -85,7 +85,6 @@ wifi:
   # Connect to "HAT-Geiger Fallback" to access the captive portal and configure Wi-Fi.
   ap:
     ssid: "HAT-Geiger Fallback"
-    password: "HMXKEehTzi81"
 
 captive_portal:
 
@@ -126,7 +125,7 @@ update:
   - platform: http_request
     name: "Firmware Update"
     id: firmware_update
-    source: https://github.com/homeautomationthings/HAT-Geiger/releases/latest/download/hat-geiger.bin
+    source: https://github.com/homeautomationthings/HAT-Geiger/releases/latest/download/manifest.json
 
 # ===================================
 # OUTPUTS
@@ -170,16 +169,43 @@ sensor:
   - platform: pulse_counter
     pin: GPIO6
     name: "CPM"
-    icon: "mdi:radioactive"
     id: cpm_sensor
+    icon: "mdi:radioactive"
     force_update: true         # Report every interval even if the value has not changed
     accuracy_decimals: 0
     on_value:
       then:
         - component.update: radiation_sensor
-        - globals.set:
-            id: last_cpm_count
-            value: !lambda return id(cpm_sensor).state;
+        - if:
+            condition:
+              lambda: 'return id(enable_radmon_switch).state;'
+            then:
+              - http_request.get:
+                  url: !lambda |-
+                    return "https://radmon.org/radmon.php?function=submit&user=" +
+                      id(text_radmon_user).state +
+                      "&password=" +
+                      id(text_radmon_password).state +
+                      "&value=" +
+                      std::to_string((int)x) +
+                      "&unit=CPM";
+                  request_headers:
+                    Content-Type: application/json
+                  capture_response: true
+                  on_response:
+                    then:
+                      - lambda: |-
+                          std::string clean_body = body;
+                          clean_body = clean_body.substr(0, clean_body.find('<'));
+                          ESP_LOGI("radmon", "Response: %s", clean_body.c_str());
+                          id(radmon_response).publish_state(clean_body);
+                          id(radmon_last_update).publish_state(id(ha_time).now().strftime("%F %T"));
+                  on_error:
+                    then:
+                      - lambda: |-
+                          ESP_LOGI("radmon", "Response: Timeout");
+                          id(radmon_response).publish_state("Timeout");
+                          id(radmon_last_update).publish_state(id(ha_time).now().strftime("%F %T"));
 
   # Converts CPM to µSv/hr using the J321 Geiger tube conversion factor.
   # Conversion factor 151 CPM/(µSv/hr) is specific to the J321 tube.
@@ -296,95 +322,26 @@ switch:
     restore_mode: RESTORE_DEFAULT_OFF
     optimistic: true
 
-# ===================================
-# INTERVALS
-# ===================================
-interval:
 
-  # Uploads the latest CPM value to radmon.org every 65 seconds.
-  # 65s is used instead of 60s to avoid clashing with the pulse_counter update interval
-  # and to stay within radmon.org's recommended minimum submission interval.
-  # The response body is stripped of any trailing HTML before being stored.
-  - interval: 65s
-    then:
-      - if:
-          condition:
-            lambda: 'return id(enable_radmon_switch).state;'
-          then:
-            - http_request.get:
-                url: !lambda |-
-                  return "https://radmon.org/radmon.php?function=submit&user=" +
-                    id(global_radmon_username) +
-                    "&password=" +
-                    id(global_radmon_password) +
-                    "&value=" +
-                    std::to_string((int)id(last_cpm_count)) +
-                    "&unit=CPM";
-                request_headers:
-                  Content-Type: application/json
-                capture_response: true
-                on_response:
-                  then:
-                    - lambda: |-
-                        std::string clean_body = body;
-                        clean_body = clean_body.substr(0, clean_body.find('<'));
-                        ESP_LOGI("radmon", "Response: %s", clean_body.c_str());
-                        id(radmon_response).publish_state(clean_body);
-                        id(radmon_last_update).publish_state(id(ha_time).now().strftime("%F %T"));
-                on_error:
-                  then:
-                    - lambda: |-
-                        ESP_LOGI("radmon", "Response: Timeout");
-                        id(radmon_response).publish_state("Timeout");
-                        id(radmon_last_update).publish_state(id(ha_time).now().strftime("%F %T"));
+
 
 # ===================================
 # TEXTS
 # ===================================
 text:
 
-  # Radmon.org account credentials.
-  # Values are written to globals on change so they persist across reboots via NVS.
   - platform: template
     name: "Radmon Username"
     id: text_radmon_user
     mode: TEXT
     optimistic: true
+    restore_value: true
     icon: mdi:account
-    on_value:
-      then:
-        - lambda: |-
-            id(global_radmon_username) = id(text_radmon_user).state;
 
   - platform: template
     name: "Radmon Password"
     id: text_radmon_password
     mode: PASSWORD
     optimistic: true
+    restore_value: true
     icon: mdi:form-textbox-password
-    on_value:
-      then:
-        - lambda: |-
-            id(global_radmon_password) = id(text_radmon_password).state;
-
-# ===================================
-# GLOBALS
-# ===================================
-globals:
-
-  # Radmon credentials stored in NVS flash, restored on boot into the text fields above
-  - id: global_radmon_username
-    type: std::string
-    restore_value: yes
-
-  - id: global_radmon_password
-    type: std::string
-    restore_value: yes
-
-  # Holds the most recent CPM value for use in the Radmon upload URL.
-  # Stored as a global so the upload interval always has access to the latest reading,
-  # even if it fires between pulse_counter update cycles.
-  - id: last_cpm_count
-    type: float
-    restore_value: yes
-    initial_value: '0'
