@@ -97,7 +97,7 @@ To contribute your readings to the public radiation monitoring network:
 3. Enter your **Radmon Username** and **Radmon Password** in the text fields
 4. Enable the **Radmon.org Upload** switch
 
-Readings will be submitted every 65 seconds automatically.
+Readings will be submitted automatically.
 
 ---
 
