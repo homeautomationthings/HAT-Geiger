@@ -44,7 +44,6 @@ esphome:
   project:
     name: "home-automation-things.hat-geiger"
     version: "1.0.0"
-  icon: "mdi:radioactive"
   on_boot:
     priority: 600                  # Run before sensors start counting pulses
     then:
@@ -52,16 +51,11 @@ esphome:
       - output.set_level:
           id: pwm_gpio4
           level: 27%
-      # Restore saved Radmon credentials into text fields
-      - text.set:
-          id: text_radmon_user
-          value: !lambda 'return id(global_radmon_username);'
-      - text.set:
-          id: text_radmon_password
-          value: !lambda 'return id(global_radmon_password);'
 
 esp32:
   variant: esp32c3
+  framework:
+    type: esp-idf
 
 dashboard_import:
   package_import_url: github://homeautomationthings/HAT-Geiger/hat-geiger.yaml@main
