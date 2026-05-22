@@ -24,6 +24,9 @@
   <a href="https://devices.esphome.io/devices/hat-geiger-counter/">
     <img src="https://esphome.io/images/made-for-esphome-black-on-white.svg"  width="170" height="50"/>
   </a>
+  <a href="https://gtlk.link/XYSA5HBk">
+    <img src="images/RightNowOnEbay.svg"  width="170" height="50"/>
+  </a>
 </p>
 
 <p align="center">
