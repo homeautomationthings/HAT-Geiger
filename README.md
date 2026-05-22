@@ -164,6 +164,10 @@ packages:
 
 ---
 
+## Where to buy
+
+You can get the HAT Geiger Counter from my <a href="https://gtlk.link/XYSA5HBk">eBay Store</a>
+  
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
