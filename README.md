@@ -4,29 +4,27 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="images/logo-white.png">
     <source media="(prefers-color-scheme: light)" srcset="images/logo-black.png">
-    <img src="images/logo-black.png" alt="Home Automation Things Logo" width="180"/>
+    <img src="images/logo-black.png" alt="Home Automation Things Logo" width="250"/>
   </picture>
 </p>
 
 <p align="center">
   <a href="https://esphome.io">
-    <img src="https://img.shields.io/badge/Built%20with-ESPHome-blue?logo=esphome" alt="Built with ESPHome"/>
-  </a>
+    <img src="https://img.shields.io/badge/Built%20with-ESPHome-blue?logo=esphome" alt="Built with ESPHome"/></a>
+  &nbsp;
   <a href="https://github.com/homeautomationthings/HAT-Geiger/releases">
-    <img src="https://img.shields.io/github/v/release/homeautomationthings/HAT-Geiger" alt="Latest Release"/>
-  </a>
+    <img src="https://img.shields.io/github/v/release/homeautomationthings/HAT-Geiger" alt="Latest Release"/></a>
+  &nbsp;
   <a href="LICENSE">
-    <img src="https://img.shields.io/github/license/homeautomationthings/HAT-Geiger" alt="License"/>
-  </a>
+    <img src="https://img.shields.io/github/license/homeautomationthings/HAT-Geiger" alt="License"/></a>
 </p>
 
 <p align="center">
   <a href="https://devices.esphome.io/devices/hat-geiger-counter/">
-    <img src="https://esphome.io/images/made-for-esphome-black-on-white.svg"  width="170" height="50"/>
-  </a>
+    <img src="https://esphome.io/images/made-for-esphome-black-on-white.svg"  width="170" height="50"/></a>
+  &nbsp;
   <a href="https://gtlk.link/XYSA5HBk">
-    <img src="images/RightNowOnEbay.svg"  width="170" height="50"/>
-  </a>
+    <img src="images/RightNowOnEbay.svg"  width="170" height="50"/></a>
 </p>
 
 <p align="center">
