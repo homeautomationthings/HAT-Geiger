@@ -21,6 +21,12 @@
 </p>
 
 <p align="center">
+  <a href="https://devices.esphome.io/devices/hat-geiger-counter/">
+    <img src="https://esphome.io/images/made-for-esphome-black-on-white.svg"  width="170" height="50"/>
+  </a>
+</p>
+
+<p align="center">
   An outdoor-rated Geiger counter built on the ESP32-C3, designed for seamless
   Home Assistant integration and optional public radiation monitoring via
   <a href="https://radmon.org">radmon.org</a>.
@@ -167,7 +173,9 @@ packages:
 ## Where to buy
 
 You can get the HAT Geiger Counter from my <a href="https://gtlk.link/XYSA5HBk">eBay Store</a>
-  
+
+---
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md) for the full version history.
