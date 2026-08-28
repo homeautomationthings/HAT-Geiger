@@ -191,6 +191,12 @@ The ESPHome configuration is open source and free to modify.
 
 ---
 
+## Contact
+
+Send me an email on hat.sweden@gmail.com
+
+---
+
 <p align="center">
   Made with ♥ by <a href="https://github.com/homeautomationthings">Home Automation Things</a>
 </p>
